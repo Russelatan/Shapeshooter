@@ -1,4 +1,6 @@
-<?php   
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
     $db_server = getenv('DB_HOST') ?: "localhost"; // Fallback for local development
     $db_user = getenv('DB_USER') ?: "root"; // Fallback for local development
