@@ -49,11 +49,32 @@ footer {
     background-color: #151414;
 }
 
+.menu_buttons{
+    position: absolute;
+    top: 5%;
+    left: 1%;
+    display: flex;
+    justify-content: space-around;
+    flex-direction: column;
+    align-items: center;
+    width: 30%;
+    height: auto;
+    gap: 20px;
+    background: linear-gradient(to right, #13FFE3, #0057FF);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 20px;
+    cursor: pointer;
+}
+
 #playerprofile {
-    position: relative;
+    /* position: relative;
     top: 30px;
-    left: 20px;
+    left: 20px; */
+    display: flex;
     background-color: transparent;
+    justify-content: start;
     font-family: Mali-Medium;
     background: linear-gradient(to right, #13FFE3, #0057FF);
     -webkit-background-clip: text;
@@ -61,8 +82,10 @@ footer {
     color: transparent;
     font-size: 25px;
     height: 40px;
+    width: 100%;
     border: none;
     cursor: pointer;
+    gap: 20px;
 }
 
 #playerprofile > :nth-child(1){
@@ -118,6 +141,69 @@ footer {
     
 }
 
+.leaderboard {
+    display: flex;
+    justify-content: start;
+    background-color: transparent;
+    font-family: Mali-Medium;
+    background: linear-gradient(to right, #13FFE3, #0057FF);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 25px;
+    height: 40px;
+    width: 100%;
+    border: none;
+    cursor: pointer;
+}
+
+.leaderboard > :nth-child(1){
+    width: 30px;
+    height: 30px;
+    z-index: 3;
+    transition: 0.5s ease;
+}
+
+.leaderboard > :nth-child(1):hover{
+    filter: drop-shadow(0px 0px 10px rgb(229, 255, 0));
+}
+
+.leaderboard > :nth-child(2){
+    margin-left: 20px;
+}
+
+.leaderboardUIbg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 80vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: -1;
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    transition: 0.3s ease-in;
+    background-color: transparent;
+}
+
+.leaderboardUI {
+    display: flex;
+    position: relative;
+    justify-content: space-evenly;
+    flex-direction: column;
+    height: 45vh;
+    width: 60vh;
+    background: linear-gradient(to right, #13FFE3, #0057FF);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: 1s ease-in;
+    border-radius: 20px;
+    animation: scale 0.5s ease;
+}
 .playernamesUI {
     
     display: flex;
@@ -134,7 +220,7 @@ footer {
     
 }
 
-#playernamelist_UI {
+.login_form {
     
     display: flex;
     position: relative;
@@ -153,7 +239,7 @@ footer {
     
 }
 
-#playernamelist_UI > div:first-child{
+.login_form > div:first-child{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -221,7 +307,7 @@ footer {
     margin-right: 100px;
 }
 
-#createnewplayer {
+.createnewplayer, .logout_div {
     width: 50%;
     position: relative;
     display: flex;
@@ -312,6 +398,65 @@ footer {
     width: 250px;
     height: 50px;
 
+}
+
+
+.response {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -280%);
+    font-family: Mali-Medium;
+    font-size: 20px;
+    background: linear-gradient(to right, #13FFE3, #0057FF);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: 250px;
+    height: 50px;
+    opacity: 0;
+    animation: fadeInOut 4s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+
+.logout {
+    background: linear-gradient(to right, #13FFE3, #0057FF);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 20px;
+    text-decoration: none;
+    transition: all 0.5s ease;
+}
+
+#logouttxt{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+.response.hide, .login_form.hide, .logout_div.hide, .createnewplayer.hide {
+    display: none;
 }
 
 #start {

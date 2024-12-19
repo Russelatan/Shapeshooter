@@ -1,6 +1,3 @@
-
-
-
 const pause = document.querySelector("#pauseicon"),
     continues = document.querySelector("#continue"),
     newgame = document.querySelector("#newgame"),
@@ -12,9 +9,6 @@ const pause = document.querySelector("#pauseicon"),
     gameover_newgame = document.querySelector("#gameover_newgame"),
     gameover_mainmenu = document.querySelector("#gameover_mainmenu"),
     score_form = document.querySelector("#SCOREDIV"),
-    
-
-
     gameUI = document.querySelector("#gameUI"),
     pauseUIbg = document.querySelector("#pauseUI"),
     pauseUI = document.querySelector(".pauseUI"),
@@ -22,8 +16,624 @@ const pause = document.querySelector("#pauseicon"),
     newgameUIbg = document.querySelector("#newgameUIbg"),
     gameoverUIbg = document.querySelector("#gameoverUIbg"),
     gameoverUI = document.querySelector(".gameoverUI");
+class Game {
+
+    constructor() {
+        this.mainmusic = "bgm/EnteringABlackHole.mp3"
+        this.ingamemusic = "bgm/OneCosmosRoyalty.mp3"
+        this.audioplay = false;
+        this.square = "icons/square.png",
+        this.circle = "icons/circle.png",
+        this.triangle = "icons/triangle.png";
+        this.shapes =   [   this.square,
+                            this.circle,
+                            this.triangle]
+
+        this.gameState = {
+            player: document.querySelector('#player'),
+            bulletpoint: document.querySelector("#bulletpoint"),
+            playerhp: document.querySelector(".playerhp"),
+            scorediv: document.querySelector("#SCORE"),
+            scoreInput: document.getElementById('scoreInput'),
+            game: gameUI,
+            gameoffsetheight: gameUI.offsetHeight,
+            gameoffsetwidth: gameUI.offsetWidth,
+            stopgame: false,
+            speed: 7,
+            enemycount: 500,
+            spawnspeed: 3000,
+            shapecount: null
+        };
+
+        this.gameState.player.style.top = (this.gameState.gameoffsetheight / 2) + 'px';
+        this.gameState.player.style.left = 300 + 'px';
+        this.gameState.playerhp.style.width = "400px";
+        this.gameState.scorediv.style.top = "89.5%";
+        this.gameState.scorediv.style.left = "57%";
+
+        this.player = {
+            hp: 20.0,
+            hp_gain: 0,
+            hp_gain_switch: false,
+            score: 0,
+            ebulletsi: [],
+            bullets: [],
+            playerbullet: document.querySelector('.bullet'),
+            playerbullet_speed: 300,
+            clickcooldown: false,
+            isHolding: false,
+            mousecount: false,
+            mouseX: null,
+            mouseY: null,
+            powerupTimer: false,
+            normalbullet: true,
+        }
+        this.enemies = [];
+        this.powerups = [];
+        this.spawnIntervals = [];
+    }
+
+    toggleAllBullets() {
+        const bullets = document.querySelectorAll('.bullet'); // Select all bullet elements
+        bullets.forEach(bullet => {
+            bullet.classList.toggle('powered'); // Toggle the class on each bullet
+        });
+    }
 
 
+    startTimer(powerup) {
+        // Check if the timer already exists
+        if (!powerup) {
+            // Set the timer for 20 seconds
+            powerup = setTimeout(() => {
+                console.log("Timer completed!"); // Action to perform when the timer completes
+                // Reset the timer variable
+                shapeshooter.player.powerupTimer = true; 
+                this.player.playerbullet_speed = 300;
+                this.player.normalbullet = true;
+                
+            }, 20000); // 20000 milliseconds = 20 seconds
+
+            console.log("Timer started for 20 seconds.");
+            this.player.playerbullet_speed = 150;
+            this.player.normalbullet = false;
+            
+        } else {
+            console.log("Timer is already running.");
+            
+        }
+    }
+
+    spawnEnemySquare() {
+        var enemy = document.createElement('img');
+        enemy.className = "enemy";
+        enemy.src = this.square
+        var topy = Math.floor(Math.random() * (this.gameState.gameoffsetheight - 60));
+        if (topy >= this.gameState.gameoffsetheight - 30){
+            enemy.style.top = topy - 50 + 'px';
+        }
+        else{
+            enemy.style.top = topy + 'px';
+        }
+        
+        enemy.style.left = this.gameState.gameoffsetwidth + 30 + 'px';
+        this.gameState.game.appendChild(enemy);
+    
+        // Create an enemy object and push it to the 'enemies' array
+        let enemyObj = {
+
+            el: enemy,
+            shape: "square",
+            ex: parseInt(enemy.style.left.replace("px", "")),
+            ey: parseInt(enemy.style.top.replace("px", "")),
+            ebullets: [],
+            createbullet: null,
+            enemyspeed: 3,
+            enemybulletspeed: 7
+        
+        };
+    
+        enemyObj.createbullet = setInterval(() => {
+            // Create an enemy bullet
+            var enemybullet = document.createElement('div');
+            enemybullet.className = 'enemybullet';
+            enemybullet.style.top = (parseInt(enemy.style.top.replace("px", "")) + 12) + 'px';
+            enemybullet.style.left = (parseInt(enemy.style.left.replace("px", "")) + 12) + 'px';
+    
+            this.gameState.game.appendChild(enemybullet);
+    
+            enemyObj.ebullets.push({
+                ebullet: enemybullet,
+                x: this.gameState.gameoffsetwidth
+            });
+        }, 1800);
+    
+        this.enemies.push(enemyObj);
+    }
+
+    spawnEnemyCircle() {
+        var enemy = document.createElement('img');
+        enemy.className = 'enemy';
+        enemy.src = this.circle
+        var topy = Math.floor(Math.random() * (this.gameState.gameoffsetheight - 60));
+        if (topy >= this.gameState.gameoffsetheight - 30){
+            enemy.style.top = topy - 50 + 'px';
+        }
+        else{
+            enemy.style.top = topy + 30 + 'px';
+        }
+        enemy.style.left = this.gameState.gameoffsetwidth + 30 + 'px';
+        this.gameState.game.appendChild(enemy);
+    
+        // Create an enemy object and push it to the 'enemies' array
+        let enemyObj = {
+            el: enemy,
+            shape: "circle",
+            ex: parseInt(enemy.style.left.replace("px", "")),
+            ey: parseInt(enemy.style.top.replace("px", "")),
+            ebullets: [],
+            createbullet: null,
+            enemyspeed: 4,
+            enemybulletspeed: 8
+        };
+    
+        enemyObj.createbullet = setInterval(() => {
+            // Create an enemy bullet
+            var enemybullet = document.createElement('div');
+            enemybullet.className = 'enemybullet';
+            enemybullet.style.top = (parseInt(enemy.style.top.replace("px", "")) + 12) + 'px';
+            enemybullet.style.left = (parseInt(enemy.style.left.replace("px", "")) + 12) + 'px';
+    
+            this.gameState.game.appendChild(enemybullet);
+    
+            enemyObj.ebullets.push({
+                ebullet: enemybullet,
+                x: this.gameState.gameoffsetwidth
+            });
+        }, 1500);
+    
+        this.enemies.push(enemyObj);
+    }
+
+    spawnEnemyTriangle() {
+        var enemy = document.createElement('img');
+        enemy.className = 'enemy';
+        enemy.style.transform = "rotateZ(30deg)";
+        enemy.src = this.triangle
+        var topy = Math.floor(Math.random() * (this.gameState.gameoffsetheight - 60));
+        if (topy >= this.gameState.gameoffsetheight - 30){
+            enemy.style.top = topy - 30 + 'px';
+        }
+        else{
+            enemy.style.top = topy + 'px';
+        }
+        enemy.style.left = this.gameState.gameoffsetwidth + 50 + 'px';
+        this.gameState.game.appendChild(enemy);
+    
+        // Create an enemy object and push it to the 'enemies' array
+        let enemyObj = {
+            el: enemy,
+            shape: "triangle",
+            ex: parseInt(enemy.style.left.replace("px", "")),
+            ey: parseInt(enemy.style.top.replace("px", "")),
+            ebullets: [],
+            createbullet: null,
+            enemyspeed: 6,
+            enemybulletspeed: 10
+        };
+    
+        enemyObj.createbullet = setInterval(() => {
+            // Create an enemy bullet
+            var enemybullet = document.createElement('div');
+            enemybullet.className = 'enemybullet';
+            enemybullet.style.top = (parseInt(enemy.style.top.replace("px", "")) + 12) + 'px';
+            enemybullet.style.left = (parseInt(enemy.style.left.replace("px", "")) + 12) + 'px';
+    
+            this.gameState.game.appendChild(enemybullet);
+    
+            enemyObj.ebullets.push({
+                ebullet: enemybullet,
+                x: this.gameState.gameoffsetwidth
+            });
+        }, 1000);
+    
+        this.enemies.push(enemyObj);
+    }
+
+    spawn_fast_bullets() {
+        var fast_bullets = document.createElement('div');
+        fast_bullets.className = 'fast_bullets';
+        var topy = Math.floor(Math.random() * (this.gameState.gameoffsetheight - 60));
+        if (topy >= this.gameState.gameoffsetheight - 30){
+            fast_bullets.style.top = topy - 30 + 'px';
+        }
+        else{
+            fast_bullets.style.top = topy + 'px';
+        }
+        fast_bullets.style.left = this.gameState.gameoffsetwidth + 50 + 'px';
+        this.gameState.game.appendChild(fast_bullets);
+    
+        // Create an enemy object and push it to the 'enemies' array
+        let fast_bulletsObj = {
+            el: fast_bullets,
+            ex: parseInt(fast_bullets.style.left.replace("px", "")),
+            ey: parseInt(fast_bullets.style.top.replace("px", "")),
+            powerupspeed: 4,
+        };
+    
+        
+    
+        this.powerups.push(fast_bulletsObj);
+    }
+
+    
+
+    HP_decay(){
+    
+    
+        this.player.hp -= 0.25;
+        this.gameState.playerhp.style.width = parseInt(this.gameState.playerhp.style.width) - 5 + "px"
+        console.log(`hp: ${this.player.hp}  divhp: ${parseInt(this.gameState.playerhp.style.width)}`)
+    
+        if (this.player.hp_gain === 3 && this.player.hp <= 18.0 && this.player.hp > 1){
+            console.log("HP gain")
+            this.player.hp_gain = 0;
+            this.player.hp += 1.0;
+            this.gameState.playerhp.style.width = parseInt(this.gameState.playerhp.style.width) + 20 + "px"
+        }
+    
+        if (this.player.hp > 15){
+            this.gameState.playerhp.style.backgroundColor = "#05ff26";
+        }
+        else if (this.player.hp > 10){
+            this.gameState.playerhp.style.backgroundColor = "yellow";
+        }
+        else if (this.player.hp > 5){
+            this.gameState.playerhp.style.backgroundColor = "rgb(255, 60, 0)";
+        }
+        else{
+            this.gameState.playerhp.style.backgroundColor = "rgb(213, 0, 0)";
+        }
+        
+    }
+
+    spawnfunction(){
+    
+        this.spawninterval = setInterval(() => {
+            this.gameState.shapecount = Math.floor(Math.random() * 3);
+            
+            if (this.player.hp_gain_switch === true){
+                this.HP_decay()
+            }
+    
+            if (this.player.hp > 0) {
+                if (this.gameState.shapecount === 0){
+                    this.spawnEnemySquare();
+                    this.gameState.enemycount--;
+                }
+                else if (this.gameState.shapecount === 1){
+                    this.spawnEnemyCircle();
+                    this.gameState.enemycount--;
+                }
+                else{
+                    this.spawnEnemyTriangle()
+                    this.gameState.enemycount--;
+                }
+
+                let result = Math.floor(Math.random() * 20) + 1;
+                if (result >= 19){
+                    this.spawn_fast_bullets();
+                    console.log("powered bullet", result);
+                }
+            }
+            else {
+                this.gameState.playerhp.style.width = "0px";
+                clearInterval(this.spawninterval);
+                setTimeout(changeUI(gameUI,gameoverUIbg,true),5000);
+                this.gameState.scoreInput.value = parseInt(this.gameState.scorediv.innerText);
+                
+                
+                score_form.addEventListener('submit', function(event) {
+                    event.preventDefault(); // Prevent the form from submitting the traditional way
+                
+                    const formData = new FormData(this);
+                
+                    fetch('score.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        // Log the response for debugging
+                        return response.text().then(text => {
+                            console.log('Response:', text); // Log the raw response
+                            try {
+                                return JSON.parse(text); // Attempt to parse the response as JSON
+                            } catch (e) {
+                                throw new Error('Invalid JSON: ' + e.message);
+                            }
+                        });
+                    })
+                    .then(data => {
+                        console.log(data.message); // Log the response message
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+                score_form.requestSubmit();
+                
+            }
+        }, this.gameState.spawnspeed);
+
+    }
+
+    enemyspawnfunction(){
+        setTimeout(() => {
+            clearInterval(this.spawninterval);
+            shapeshooter.gameState.spawnspeed = 2000;
+            shapeshooter.spawnfunction()
+        }, 15000);
+        
+        setTimeout(() => {
+            clearInterval(this.spawninterval);
+            shapeshooter.gameState.spawnspeed = 1000;
+            shapeshooter.spawnfunction()
+        }, 30000);
+        
+        setTimeout(() => {
+            clearInterval(this.spawninterval);
+            shapeshooter.gameState.spawnspeed = 500;
+            shapeshooter.player.hp_gain_switch = true;
+            shapeshooter.spawnfunction()
+        }, 45000);
+        
+        setTimeout(() => {
+            clearInterval(this.spawninterval);
+            shapeshooter.gameState.spawnspeed = 350;
+            shapeshooter.spawnfunction()
+        }, 60000);
+    }
+
+    gameLoop() {
+    
+        if (!shapeshooter.gameState.stopgame){
+            shapeshooter.player.bullets.forEach((bullet, i) => {
+                var x = parseInt(bullet.el.style.left),
+                    dx = bullet.x - x,
+                    dist = Math.sqrt(dx * dx);
+        
+                if (dist < shapeshooter.gameState.speed) {
+                    bullet.el.parentNode.removeChild(bullet.el);
+                    shapeshooter.player.bullets.splice(i, 1);
+                } else {
+                    bullet.el.style.left = x + shapeshooter.gameState.speed * dx / dist + 'px';
+                }
+        
+            });
+        
+            
+
+            shapeshooter.powerups.forEach((fast_bullets,i) => {
+        
+                var px = parseInt(fast_bullets.el.style.left),
+                    py = parseInt(fast_bullets.el.style.top),
+                    mx = parseInt(shapeshooter.gameState.player.style.left),
+                    my = parseInt(shapeshooter.gameState.player.style.top),
+                    dx = px - mx,
+                    dy = py - my,
+                    dist = Math.sqrt(dx * dx + dy * dy);
+        
+                if (dist < 30) {
+                    
+                    fast_bullets.el.parentNode.removeChild(fast_bullets.el);
+                    shapeshooter.powerups.splice(i, 1);
+                    shapeshooter.player.powerupTimer = false;
+                    shapeshooter.startTimer(shapeshooter.player.powerupTimer);
+
+                    
+                    
+                
+                }
+            })
+
+            shapeshooter.powerups.forEach((fast_bullet,i) => {
+                var px = parseInt(fast_bullet.el.style.left.replace("px", "")),
+                    dx = 0 - px,
+                    dist = Math.sqrt(dx * dx);
+                    
+                    if (dist < fast_bullet.powerupspeed) {
+                        fast_bullet.el.parentNode.removeChild(fast_bullet.el);
+                        shapeshooter.powerups.splice(i, 1);
+                        // ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
+                        // enemy.ebullets.splice(j, 1);
+        
+                        
+                    } else {
+                        fast_bullet.el.style.left = px + fast_bullet.powerupspeed * dx / dist + 'px';
+                    }
+        
+                
+            })
+
+            shapeshooter.enemies.forEach((enemy,i) => {
+        
+                var ex = parseInt(enemy.el.style.left),
+                    ey = parseInt(enemy.el.style.top),
+                    mx = parseInt(shapeshooter.gameState.player.style.left),
+                    my = parseInt(shapeshooter.gameState.player.style.top),
+                    dx = ex - mx,
+                    dy = ey - my,
+                    dist = Math.sqrt(dx * dx + dy * dy);
+        
+                if (dist < 30) {
+                    clearInterval(enemy.createbullet);
+                    enemy.ebullets.forEach(ebullet => {
+                        ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
+                    });
+                    enemy.el.parentNode.removeChild(enemy.el);
+                    shapeshooter.enemies.splice(i, 1);
+                    
+                    if (enemy.shape === "square"){
+                        shapeshooter.gameState.scorediv.textContent = parseInt(shapeshooter.gameState.scorediv.innerText) + 10;
+                    }
+                    else if (enemy.shape === "circle"){
+                        shapeshooter.gameState.scorediv.textContent = parseInt(shapeshooter.gameState.scorediv.innerText) + 50;
+                    }
+                    else{
+                        shapeshooter.gameState.scorediv.textContent = parseInt(shapeshooter.gameState.scorediv.innerText) + 100;
+                    }
+                    shapeshooter.player.hp--;
+                    shapeshooter.gameState.playerhp.style.width = parseInt(shapeshooter.gameState.playerhp.style.width.replace("px","")) - 20 + "px"
+                        if (shapeshooter.player.hp > 15){
+                            shapeshooter.gameState.playerhp.style.backgroundColor = "#05ff26";
+                        }
+                        else if (shapeshooter.player.hp > 10){
+                            shapeshooter.gameState.playerhp.style.backgroundColor = "yellow";
+                        }
+                        else if (shapeshooter.player.hp > 5){
+                            shapeshooter.gameState.playerhp.style.backgroundColor = "rgb(255, 60, 0)";
+                        }
+                        else{
+                            shapeshooter.gameState.playerhp.style.backgroundColor = "rgb(213, 0, 0)";
+                        }
+                }
+            })
+            
+        
+            shapeshooter.enemies.forEach((enemy,i) => {
+                var ex = parseInt(enemy.el.style.left.replace("px", "")),
+                    dx = 0 - ex,
+                    dist = Math.sqrt(dx * dx);
+                    
+                    if (dist < enemy.enemyspeed) {
+                        enemy.el.parentNode.removeChild(enemy.el);
+                        shapeshooter.enemies.splice(i, 1);
+                        // ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
+                        // enemy.ebullets.splice(j, 1);
+        
+                        enemy.ebullets.forEach((ebullet) => {
+                            ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
+                        });
+                        clearInterval(enemy.createbullet);
+                    } else {
+                        enemy.el.style.left = ex + enemy.enemyspeed * dx / dist + 'px';
+                    }
+        
+                
+            })
+        
+            shapeshooter.enemies.forEach((enemy, i) => {
+                shapeshooter.player.bullets.forEach((bullet, j) => {
+                    var ex = parseInt(enemy.el.style.left),
+                        ey = parseInt(enemy.el.style.top),
+                        bx = parseInt(bullet.el.style.left),
+                        by = parseInt(bullet.el.style.top),
+                        dx = ex - bx,
+                        dy = ey - by,
+                        dist = Math.sqrt(dx * dx + dy * dy);
+        
+                    if (dist < 30) {
+                        clearInterval(enemy.createbullet);
+                        if (shapeshooter.player.hp_gain < 3){
+                            shapeshooter.player.hp_gain++;
+                        }
+                        console.log(`hp_gain: ${shapeshooter.player.hp_gain}`)
+                        enemy.ebullets.forEach(ebullet => {
+                            ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
+                        });
+                        enemy.el.parentNode.removeChild(enemy.el);
+                        shapeshooter.enemies.splice(i, 1);
+                        
+                        bullet.el.parentNode.removeChild(bullet.el);
+                        shapeshooter.player.bullets.splice(j, 1);
+                        if (enemy.shape === "square"){
+                            shapeshooter.gameState.scorediv.textContent = parseInt(shapeshooter.gameState.scorediv.innerText) + 10;
+                        }
+                        else if (enemy.shape === "circle"){
+                            shapeshooter.gameState.scorediv.textContent = parseInt(shapeshooter.gameState.scorediv.innerText) + 50;
+                        }
+                        else{
+                            shapeshooter.gameState.scorediv.textContent = parseInt(shapeshooter.gameState.scorediv.innerText) + 100;
+                        }
+                    }
+                });
+            });
+        
+            shapeshooter.enemies.forEach((enemy, i) => {
+                enemy.ebullets.forEach((ebullet, j) => {
+                    var x = parseInt(ebullet.ebullet.style.left.replace("px", "")),
+                        dx = ebullet.x - x,
+                        dist = Math.sqrt(dx * dx);
+        
+                    if (dist < enemy.enemybulletspeed) {
+                        ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
+                        enemy.ebullets.splice(j, 1);
+                        
+                    } else {
+                        ebullet.ebullet.style.left = x - enemy.enemybulletspeed * dx / dist + 'px';
+                    }
+        
+                    
+                })
+                
+        
+               
+            });
+    
+    
+            if (shapeshooter.player.hp > 0){
+                    shapeshooter.enemies.forEach((enemy, i) => {
+                    enemy.ebullets.forEach((ebullet, j) => {
+                        var px = parseInt(player.style.left.replace("px", "")),
+                            py = parseInt(player.style.top.replace("px", "")),
+                            bx = parseInt(ebullet.ebullet.style.left.replace("px", "")),
+                            by = parseInt(ebullet.ebullet.style.top.replace("px", "")),
+                            dx = px - bx,
+                            dy = py - by,
+                            dist = Math.sqrt(dx * dx + dy * dy);
+            
+                        if (dist < 30) {
+                            ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
+                            enemy.ebullets.splice(j, 1);
+                            shapeshooter.player.hp--;
+                            shapeshooter.gameState.playerhp.style.width = parseInt(shapeshooter.gameState.playerhp.style.width.replace("px","")) - 20 + "px"
+                            if (shapeshooter.player.hp > 15){
+                                shapeshooter.gameState.playerhp.style.backgroundColor = "#05ff26";
+                            }
+                            else if (shapeshooter.player.hp > 10){
+                                shapeshooter.gameState.playerhp.style.backgroundColor = "yellow";
+                            }
+                            else if (shapeshooter.player.hp > 5){
+                                shapeshooter.gameState.playerhp.style.backgroundColor = "rgb(255, 60, 0)";
+                            }
+                            else{
+                                shapeshooter.gameState.playerhp.style.backgroundColor = "rgb(213, 0, 0)";
+                            }
+                            // Handle player hit logic here
+                        }
+                    });
+            
+                });
+            }
+    
+            else{
+                try{
+                    shapeshooter.gameState.player.parentNode.removeChild(player)
+                }
+                catch(e){
+                    null
+                }
+            }
+            
+        
+            requestAnimationFrame(shapeshooter.gameLoop);
+        }
+    }
+
+    
+
+    
+}
+
+const shapeshooter = new Game();
 function changeUI(UIout,UIin,bool = false){
 
     UIinchildren = UIin.children;
@@ -54,10 +664,7 @@ function changeUI(UIout,UIin,bool = false){
             // element.style.opacity = "0";
         }
         UIout.style.zIndex = "-1";
-    
     }
-
-    
     
 }
 
@@ -101,10 +708,8 @@ let mouseenter = "mouseenter",
 
 document.addEventListener("keydown", (event) => {
     event.preventDefault();
-
     if (event.key === "p" || event.key === "P"){
         changeUI(gameUI,pauseUIbg,true);
-        // stopgame = true;
     }
     
 });
@@ -200,341 +805,41 @@ gameover_mainmenu.addEventListener(mouseclick,() => {
     replaceWindow(gameUI,"shapeshooter.php");
     
 });
-// var box = document.createElement("div");
-//     box.id = "box",
-//     gameUI.appendChild(box);
 
-
-
-const mainmusic = "bgm\EnteringABlackHole.mp3",
-    ingamemusic = "bgm\OneCosmosRoyalty.mp3";
-
-
-
-
-
-
-
-let square = "icons/square.png",
-    circle = "icons/circle.png",
-    triangle = "icons/triangle.png";
-
-let shapes = [square,circle,triangle]
-
-var numdex = null;
-
-var player = document.querySelector('#player'),
-    score = 0
-    playerhp = document.querySelector(".playerhp"),
-    scorediv = document.querySelector("#SCORE"),
-    scoreInput = document.getElementById('scoreInput'),
-    
-    game = gameUI,
-    bulletpoint = document.querySelector("#bulletpoint"),
-    ebulletsi = [],
-    bullets = [],
-    enemies = [],
-    gameoffsetheight = game.offsetHeight,
-    gameoffsetwidth = game.offsetWidth,
-    scorediv.style.top = "89.5%",
-    scorediv.style.left = "57%",
-    
-    hp = 20.0,
-    hp_gain = 0,
-    hp_gain_switch = false,
-    stopgame = false,
-    speed = 7;
-
-
-
-player.style.top = (gameoffsetheight / 2) + 'px';
-player.style.left = 300 + 'px';
-playerhp.style.width = "400px"
-
-let enemycount = 500;
-let spawnspeed = 3000;
-let shapecount = null;
-
-function spawnEnemySquare() {
-    var enemy = document.createElement('img');
-    enemy.className = "enemy";
-    enemy.src = square
-    topy = Math.floor(Math.random() * (gameoffsetheight - 60));
-    if (topy >= gameoffsetheight - 30){
-        
-        enemy.style.top = topy - 50 + 'px';
-    }
-    else{
-        enemy.style.top = topy + 'px';
-    }
-    
-    enemy.style.left = gameoffsetwidth + 30 + 'px';
-    game.appendChild(enemy);
-
-    // Create an enemy object and push it to the 'enemies' array
-    let enemyObj = {
-        el: enemy,
-        shape: "square",
-        ex: parseInt(enemy.style.left.replace("px", "")),
-        ey: parseInt(enemy.style.top.replace("px", "")),
-        ebullets: [],
-        createbullet: null,
-        enemyspeed: 3,
-        enemybulletspeed: 7
-        
-    };
-
-    enemyObj.createbullet = setInterval(() => {
-        // Create an enemy bullet
-        var enemybullet = document.createElement('div');
-        enemybullet.className = 'enemybullet';
-        enemybullet.style.top = (parseInt(enemy.style.top.replace("px", "")) + 12) + 'px';
-        enemybullet.style.left = (parseInt(enemy.style.left.replace("px", "")) + 12) + 'px';
-
-        game.appendChild(enemybullet);
-
-        enemyObj.ebullets.push({
-            ebullet: enemybullet,
-            x: gameoffsetwidth
-        });
-    }, 1800);
-
-    enemies.push(enemyObj);
-}
-
-function spawnEnemyCircle() {
-    var enemy = document.createElement('img');
-    enemy.className = 'enemy';
-    enemy.src = circle
-    topy = Math.floor(Math.random() * (gameoffsetheight - 60));
-    if (topy >= gameoffsetheight - 30){
-        enemy.style.top = topy - 50 + 'px';
-    }
-    else{
-        enemy.style.top = topy + 30 + 'px';
-    }
-    enemy.style.left = gameoffsetwidth + 30 + 'px';
-    game.appendChild(enemy);
-
-    // Create an enemy object and push it to the 'enemies' array
-    let enemyObj = {
-        el: enemy,
-        shape: "circle",
-        ex: parseInt(enemy.style.left.replace("px", "")),
-        ey: parseInt(enemy.style.top.replace("px", "")),
-        ebullets: [],
-        createbullet: null,
-        enemyspeed: 4,
-        enemybulletspeed: 8
-    };
-
-    enemyObj.createbullet = setInterval(() => {
-        // Create an enemy bullet
-        var enemybullet = document.createElement('div');
-        enemybullet.className = 'enemybullet';
-        enemybullet.style.top = (parseInt(enemy.style.top.replace("px", "")) + 12) + 'px';
-        enemybullet.style.left = (parseInt(enemy.style.left.replace("px", "")) + 12) + 'px';
-
-        game.appendChild(enemybullet);
-
-        enemyObj.ebullets.push({
-            ebullet: enemybullet,
-            x: gameoffsetwidth
-        });
-    }, 1500);
-
-    enemies.push(enemyObj);
-}
-
-function spawnEnemyTriangle() {
-    var enemy = document.createElement('img');
-    enemy.className = 'enemy';
-    enemy.style.transform = "rotateZ(30deg)";
-    enemy.src = triangle
-    topy = Math.floor(Math.random() * (gameoffsetheight - 60));
-    if (topy >= gameoffsetheight - 30){
-        enemy.style.top = topy - 30 + 'px';
-    }
-    else{
-        enemy.style.top = topy + 'px';
-    }
-    enemy.style.left = gameoffsetwidth + 50 + 'px';
-    game.appendChild(enemy);
-
-    // Create an enemy object and push it to the 'enemies' array
-    let enemyObj = {
-        el: enemy,
-        shape: "triangle",
-        ex: parseInt(enemy.style.left.replace("px", "")),
-        ey: parseInt(enemy.style.top.replace("px", "")),
-        ebullets: [],
-        createbullet: null,
-        enemyspeed: 6,
-        enemybulletspeed: 10
-    };
-
-    enemyObj.createbullet = setInterval(() => {
-        // Create an enemy bullet
-        var enemybullet = document.createElement('div');
-        enemybullet.className = 'enemybullet';
-        enemybullet.style.top = (parseInt(enemy.style.top.replace("px", "")) + 12) + 'px';
-        enemybullet.style.left = (parseInt(enemy.style.left.replace("px", "")) + 12) + 'px';
-
-        game.appendChild(enemybullet);
-
-        enemyObj.ebullets.push({
-            ebullet: enemybullet,
-            x: gameoffsetwidth
-        });
-    }, 1000);
-
-    enemies.push(enemyObj);
-}
-
-
-
-function HP_decay(){
-    
-    
-    hp = hp - 0.25;
-    playerhp.style.width = parseInt(playerhp.style.width) - 5 + "px"
-    console.log(`hp: ${hp}  divhp: ${parseInt(playerhp.style.width)}`)
-
-    if (hp_gain === 3 && hp <= 18.0 && hp > 1){
-        console.log("HP gain")
-        hp_gain = 0;
-        hp = hp + 1.0;
-        playerhp.style.width = parseInt(playerhp.style.width) + 20 + "px"
-    }
-
-    if (hp > 15){
-        playerhp.style.backgroundColor = "#05ff26";
-    }
-    else if (hp > 10){
-        playerhp.style.backgroundColor = "yellow";
-    }
-    else if (hp > 5){
-        playerhp.style.backgroundColor = "rgb(255, 60, 0)";
-    }
-    else{
-        playerhp.style.backgroundColor = "rgb(213, 0, 0)";
-    }
-    
-}
-
-function spawnfunction(){
-    
-    spawninterval = setInterval(() => {
-        shapecount = Math.floor(Math.random() * 3);
-        
-        if (hp_gain_switch === true){
-            HP_decay()
-        }
-
-        if (hp > 0) {
-            if (shapecount === 0){
-                spawnEnemySquare();
-                enemycount--;
-            }
-            else if (shapecount === 1){
-                spawnEnemyCircle();
-                enemycount--;
-            }
-            else{
-                spawnEnemyTriangle()
-                enemycount--;
-            }
-        }
-        else {
-            playerhp.style.width = "0px";
-            clearInterval(spawninterval);
-            setTimeout(changeUI(gameUI,gameoverUIbg,true),5000);
-            scoreInput.value = parseInt(scorediv.innerText);
-            
-            
-            score_form.addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent the form from submitting the traditional way
-            
-                const formData = new FormData(this);
-            
-                fetch('score.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.text())
-                .then(data => {
-                    // Handle the response from the server
-                    document.getElementById('response').innerHTML = data;
-                })
-                .catch(error => console.error('Error:', error));
-            
-            });
-            score_form.requestSubmit();
-            
-        }
-    }, spawnspeed);
-}
-    
-
-
-spawnfunction()
-
-setTimeout(() => {
-    clearInterval(spawninterval);
-    spawnspeed = 2000;
-    spawnfunction()
-}, 15000);
-
-setTimeout(() => {
-    clearInterval(spawninterval);
-    spawnspeed = 1000;
-    spawnfunction()
-}, 30000);
-
-setTimeout(() => {
-    clearInterval(spawninterval);
-    spawnspeed = 500;
-    hp_gain_switch = true;
-    spawnfunction()
-}, 45000);
-
-setTimeout(() => {
-    clearInterval(spawninterval);
-    spawnspeed = 350;
-    spawnfunction()
-}, 60000);
-
-let clickcooldown = false;
-let bulletspeed = 350;
-let audioplay = false;
+shapeshooter.spawnfunction();
+shapeshooter.enemyspawnfunction();
 
 document.addEventListener("mousedown", function (e) {
-    if (hp > 0){
-        audioplay = true;
-        if (audioplay){
+    if (shapeshooter.player.hp > 0){
+        shapeshooter.audioplay = true;
+        if (shapeshooter.audioplay){
             gamemusic.play()
         }
-        isHolding = true;
+        shapeshooter.player.isHolding = true;
         holdcheck = setInterval(function () {
-            if (isHolding) {
-                if (!clickcooldown) {
+            if (shapeshooter.player.isHolding) {
+                if (!shapeshooter.player.clickcooldown) {
                     var bullet = document.createElement('div');
-                    bullet.className = 'bullet';
-                    bullet.style.top = parseInt(player.style.top.replace("px", "")) + 12 + 'px';
-                    bullet.style.left = parseInt(player.style.left) + 10 + 'px';
 
-                    game.appendChild(bullet);
-                    bullets.push({
+                    bullet.className = shapeshooter.player.normalbullet 
+                        ? 'bullet' // If normalbullet is true, set it to just 'bullet'
+                        : 'bullet powered'; // If normalbullet is false, set it to 'bullet powered'
+
+                    bullet.style.top = parseInt(shapeshooter.gameState.player.style.top.replace("px", "")) + 12 + 'px';
+                    bullet.style.left = parseInt(shapeshooter.gameState.player.style.left) + 10 + 'px';
+
+                    shapeshooter.gameState.game.appendChild(bullet);
+                    shapeshooter.player.bullets.push({
                         el: bullet,
-                        x: gameoffsetwidth + 100,
-                        y: parseInt(player.style.top.replace("px", "")) + 12
+                        x: shapeshooter.gameState.gameoffsetwidth + 100,
+                        y: parseInt(shapeshooter.gameState.player.style.top.replace("px", "")) + 12
                     });
 
-                    clickcooldown = true;
+                    shapeshooter.player.clickcooldown = true;
 
                     setTimeout(() => {
-                        clickcooldown = false;
-                    }, bulletspeed);
+                        shapeshooter.player.clickcooldown = false;
+                    }, shapeshooter.player.playerbullet_speed);
                 }
             }
         }, 100);
@@ -543,251 +848,41 @@ document.addEventListener("mousedown", function (e) {
 
 document.addEventListener("mouseup", function (e) {
     if (e.button === 0) {
-        isHolding = false;
+        shapeshooter.player.isHolding = false;
     }
 });
-
-
-let mousecount = false;
-
 
 document.addEventListener('mousemove', (event) => {
     
-    if (hp > 0){
-        mousecount = true;
+    if (shapeshooter.player.hp > 0){
+        shapeshooter.player.mousecount = true;
 
-        if (!mousecount){
-            let mouseX = event.clientX - 14;
-            let mouseY = event.clientY - 84;
+        if (!shapeshooter.player.mousecount){
+            shapeshooter.player.mouseX = event.clientX - 14;
+            shapeshooter.player.mouseY = event.clientY - 84;
 
-            if (mouseY >= 0 && mouseY <= gameoffsetheight - 30) {
-                player.style.top = mouseY + "px";
+            if (shapeshooter.player.mouseY >= 0 && shapeshooter.player.mouseY <= shapeshooter.gameState.gameoffsetheight - 30) {
+                shapeshooter.gameState.player.style.top = shapeshooter.player.mouseY + "px";
             }
         
             if (mouseX >= 0 && mouseX <= gameoffsetwidth - 30) {
-                player.style.left = mouseX + "px";
+                shapeshooter.gameState.player.style.left = mouseX + "px";
             }
         }
         else{
-            mouseX = event.clientX - 14;
-            mouseY = event.clientY - 84;
+            shapeshooter.player.mouseX = event.clientX - 14;
+            shapeshooter.player.mouseY = event.clientY - 84;
 
-            if (mouseY >= 0 && mouseY <= gameoffsetheight - 30) {
-                player.style.top = mouseY + "px";
+            if (shapeshooter.player.mouseY >= 0 && shapeshooter.player.mouseY <= shapeshooter.gameState.gameoffsetheight - 30) {
+                shapeshooter.gameState.player.style.top = shapeshooter.player.mouseY + "px";
             }
         
-            if (mouseX >= 0 && mouseX <= gameoffsetwidth - 30) {
-                player.style.left = mouseX + "px";
+            if (shapeshooter.player.mouseX >= 0 && shapeshooter.player.mouseX <= shapeshooter.gameState.gameoffsetwidth - 30) {
+                shapeshooter.gameState.player.style.left = shapeshooter.player.mouseX + "px";
             }
         }
     }
 
 });
 
-
-function gameLoop() {
-    
-    if (!stopgame){
-        bullets.forEach((bullet, i) => {
-            var x = parseInt(bullet.el.style.left),
-                dx = bullet.x - x,
-                dist = Math.sqrt(dx * dx);
-    
-            if (dist < speed) {
-                bullet.el.parentNode.removeChild(bullet.el);
-                bullets.splice(i, 1);
-            } else {
-                bullet.el.style.left = x + speed * dx / dist + 'px';
-            }
-    
-            // if (x <= 0) {
-            //     // Remove the bullet from the game
-            //     bullet.el.parentNode.removeChild(bullet.el);
-            //     bullets.splice(i, 1);
-            // }
-        });
-    
-        enemies.forEach((enemy,i) => {
-            
-            // if (mouseY >= 0 && mouseY <= gameoffsetheight - 30) {
-            //     player.style.top = mouseY + "px";
-            // }
-        
-            // if (mouseX >= 0 && mouseX <= gameoffsetwidth - 30) {
-            //     player.style.left = mouseX + "px";
-            // }
-    
-            var ex = parseInt(enemy.el.style.left),
-                ey = parseInt(enemy.el.style.top),
-                mx = parseInt(player.style.left),
-                my = parseInt(player.style.top),
-                dx = ex - mx,
-                dy = ey - my,
-                dist = Math.sqrt(dx * dx + dy * dy);
-    
-            if (dist < 30) {
-                clearInterval(enemy.createbullet);
-                enemy.ebullets.forEach(ebullet => {
-                    ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
-                });
-                enemy.el.parentNode.removeChild(enemy.el);
-                enemies.splice(i, 1);
-                
-                if (enemy.shape === "square"){
-                    scorediv.textContent = parseInt(scorediv.innerText) + 10;
-                }
-                else if (enemy.shape === "circle"){
-                    scorediv.textContent = parseInt(scorediv.innerText) + 50;
-                }
-                else{
-                    scorediv.textContent = parseInt(scorediv.innerText) + 100;
-                }
-                hp--;
-                playerhp.style.width = parseInt(playerhp.style.width.replace("px","")) - 20 + "px"
-                    if (hp > 15){
-                        playerhp.style.backgroundColor = "#05ff26";
-                    }
-                    else if (hp > 10){
-                        playerhp.style.backgroundColor = "yellow";
-                    }
-                    else if (hp > 5){
-                        playerhp.style.backgroundColor = "rgb(255, 60, 0)";
-                    }
-                    else{
-                        playerhp.style.backgroundColor = "rgb(213, 0, 0)";
-                    }
-            }
-        })
-        
-    
-        enemies.forEach((enemy,i) => {
-            var ex = parseInt(enemy.el.style.left.replace("px", "")),
-                dx = 0 - ex,
-                dist = Math.sqrt(dx * dx);
-                
-                if (dist < enemy.enemyspeed) {
-                    enemy.el.parentNode.removeChild(enemy.el);
-                    enemies.splice(i, 1);
-                    // ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
-                    // enemy.ebullets.splice(j, 1);
-    
-                    enemy.ebullets.forEach((ebullet) => {
-                        ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
-                    });
-                    clearInterval(enemy.createbullet);
-                } else {
-                    enemy.el.style.left = ex + enemy.enemyspeed * dx / dist + 'px';
-                }
-    
-            
-        })
-    
-        enemies.forEach((enemy, i) => {
-            bullets.forEach((bullet, j) => {
-                var ex = parseInt(enemy.el.style.left),
-                    ey = parseInt(enemy.el.style.top),
-                    bx = parseInt(bullet.el.style.left),
-                    by = parseInt(bullet.el.style.top),
-                    dx = ex - bx,
-                    dy = ey - by,
-                    dist = Math.sqrt(dx * dx + dy * dy);
-    
-                if (dist < 30) {
-                    clearInterval(enemy.createbullet);
-                    if (hp_gain < 3){
-                        hp_gain++;
-                    }
-                    console.log(`hp_gain: ${hp_gain}`)
-                    enemy.ebullets.forEach(ebullet => {
-                        ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
-                    });
-                    enemy.el.parentNode.removeChild(enemy.el);
-                    enemies.splice(i, 1);
-                    
-                    bullet.el.parentNode.removeChild(bullet.el);
-                    bullets.splice(j, 1);
-                    if (enemy.shape === "square"){
-                        scorediv.textContent = parseInt(scorediv.innerText) + 10;
-                    }
-                    else if (enemy.shape === "circle"){
-                        scorediv.textContent = parseInt(scorediv.innerText) + 50;
-                    }
-                    else{
-                        scorediv.textContent = parseInt(scorediv.innerText) + 100;
-                    }
-                }
-            });
-        });
-    
-        enemies.forEach((enemy, i) => {
-            enemy.ebullets.forEach((ebullet, j) => {
-                var x = parseInt(ebullet.ebullet.style.left.replace("px", "")),
-                    dx = ebullet.x - x,
-                    dist = Math.sqrt(dx * dx);
-    
-                if (dist < enemy.enemybulletspeed) {
-                    ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
-                    enemy.ebullets.splice(j, 1);
-                    
-                } else {
-                    ebullet.ebullet.style.left = x - enemy.enemybulletspeed * dx / dist + 'px';
-                }
-    
-                
-            })
-            
-    
-           
-        });
-
-
-        if (hp > 0){
-                enemies.forEach((enemy, i) => {
-                enemy.ebullets.forEach((ebullet, j) => {
-                    var px = parseInt(player.style.left.replace("px", "")),
-                        py = parseInt(player.style.top.replace("px", "")),
-                        bx = parseInt(ebullet.ebullet.style.left.replace("px", "")),
-                        by = parseInt(ebullet.ebullet.style.top.replace("px", "")),
-                        dx = px - bx,
-                        dy = py - by,
-                        dist = Math.sqrt(dx * dx + dy * dy);
-        
-                    if (dist < 30) {
-                        ebullet.ebullet.parentNode.removeChild(ebullet.ebullet);
-                        enemy.ebullets.splice(j, 1);
-                        hp--;
-                        playerhp.style.width = parseInt(playerhp.style.width.replace("px","")) - 20 + "px"
-                        if (hp > 15){
-                            playerhp.style.backgroundColor = "#05ff26";
-                        }
-                        else if (hp > 10){
-                            playerhp.style.backgroundColor = "yellow";
-                        }
-                        else if (hp > 5){
-                            playerhp.style.backgroundColor = "rgb(255, 60, 0)";
-                        }
-                        else{
-                            playerhp.style.backgroundColor = "rgb(213, 0, 0)";
-                        }
-                        // Handle player hit logic here
-                    }
-                });
-        
-            });
-        }
-
-        else{
-            try{
-                player.parentNode.removeChild(player)
-            }
-            catch(e){
-                null
-            }
-        }
-        
-    
-        requestAnimationFrame(gameLoop);
-    }
-}
-
-gameLoop();
+shapeshooter.gameLoop();

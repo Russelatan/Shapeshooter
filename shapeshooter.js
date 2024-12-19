@@ -10,34 +10,35 @@ const pp1 = document.querySelector("#pp1"),
     newgame = document.querySelector("#newgame"),
     mainmenu = document.querySelector("#mainmenu"),
     bgmMain = document.querySelector("#bgmMain"),
-    createnewplayer = document.querySelector("#createnewplayer"),
+    createnewplayer = document.querySelector(".createnewplayer"),
     create_delete_back = document.querySelector("#create_delete_back"),
     signup_back = document.querySelector("#signup_back"),
+    login_player_name = document.querySelector(".login_player_name"),
+    login_password = document.querySelector(".login_password"),
+    signup_ign = document.querySelector(".signup_ign"),
+    signup_player_name = document.querySelector(".signup_player_name"),
+    signup_password = document.querySelector(".signup_password"),
+    signup_confirm = document.querySelector(".signup_confirm"),
+    logout_div = document.querySelector(".logout_div"),
+    leaderboard = document.querySelector(".leaderboard"),
     
 
 
     mainUI = document.querySelector("#mainUI"),
     playernamesUIbg = document.querySelector("#playernamesUIbg"),
-    playernamelist_UI = document.querySelector("#playernamelist_UI"),
+    playernamesUI = document.querySelector(".playernamesUI"),
+    playernamelist_UI = document.querySelector(".login_form"),
+    leaderboardUIbg = document.querySelector(".leaderboardUIbg"),
+    leaderboardUI =document.querySelector(".leaderboardUI"),
     signupUIbg = document.querySelector("#signupUIbg"),
     signup_UI = document.querySelector("#signup_UI");
 
 let audioplay = false;
 
-let select_status = false;
-document.addEventListener("mousedown", ()=>{
-    audioplay = true;
-    if (audioplay){
-        bgmMain.play()
-    }
-    
-    
-})
+
 
 
 function rotate(){
-    
-    console.log("hi");
     
     pp1.animate(
         [
@@ -259,6 +260,19 @@ createnewplayer.addEventListener("click", ()=>{
     changeUI(mainUI,signupUIbg,true)
 })
 
+logout_div.addEventListener(mouseenter,() => {
+    buttonhover(logout_div,mouseenter)
+});
+
+logout_div.addEventListener(mouseleave,() => {
+    buttonhover(logout_div,mouseleave)
+});
+
+logout_div.addEventListener("click", () => {
+    window.location.href = "logout.php";
+});
+
+
 create_delete_back.addEventListener(mouseenter,() => {
     buttonhover(create_delete_back,mouseenter)
 });
@@ -292,14 +306,40 @@ playernamelist_UI.addEventListener('submit', function(event) {
         method: 'POST',
         body: formData
     })
-    .then(response => response.text())
+    .then(response => {
+        // Check if the response is OK (status in the range 200-299)
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
     .then(data => {
         // Handle the response from the server
-        document.getElementById('response').innerHTML = data;
+        document.querySelector('.response').innerHTML = data.message;
+        document.querySelector('.response').classList.toggle('hide');
+        login_player_name.value = "";
+        login_password.value = "";
+        logout_div.classList.toggle('hide');
+        createnewplayer.classList.toggle('hide');
+        playernamelist_UI.classList.toggle('hide');
+        playernamesUI.style.justifyContent = 'center';
+        playernamesUIbg
+        setTimeout(() => {
+            document.querySelector('.response').classList.toggle('hide');
+        }, 4000);
+        if (data.player_name != 'null'){
+            document.querySelector('.playername').innerHTML = data.player_name;
+        }
+        
     })
-    .catch(error => console.error('Error:', error));
-    changeUI(create_delete_back,mainUI,true)
-    window.location.reload()
+    .catch(error => {
+        console.error('Error:', error);
+        // Optionally, display an error message to the user
+        document.querySelector('.response').innerHTML = 'An error occurred: ' + error.message;
+        document.querySelector('.response').classList.toggle('hide');
+    });
+
+    changeUI(create_delete_back,mainUI,true);
 });
 
 signup_UI.addEventListener('submit', function(event) {
@@ -311,14 +351,21 @@ signup_UI.addEventListener('submit', function(event) {
         method: 'POST',
         body: formData
     })
-    .then(response => response.text())
+    .then(response => response.json())
     .then(data => {
         // Handle the response from the server
-        document.getElementById('response').innerHTML = data;
+        document.querySelector('.response').innerHTML = data.message;
+        document.querySelector('.response').classList.toggle('hide');
+        signup_ign.value = "";
+        signup_player_name.value = "";
+        signup_password.value = "";
+        signup_confirm.value = "";
+        setTimeout(() => {
+            document.querySelector('.response').classList.toggle('hide');
+        }, 4000);
     })
     .catch(error => console.error('Error:', error));
-    changeUI(signup_UI,mainUI,true)
-    window.location.reload()
+    changeUI(signup_UI,mainUI,true);
 });
 
 

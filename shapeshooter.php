@@ -1,7 +1,15 @@
 <?php
-    include("db.php");
+    require "db.php";
+    session_start();
 
-    $result = mysqli_query($conn, "select player_name,status from players where status = 'active'");    
+    $stmt = $conn->prepare("SELECT player_name FROM players WHERE player_name = :player_name");
+    if(isset($_SESSION["username"])){
+        $player_name = $_SESSION["username"];
+    }
+    $stmt->bindParam(':player_name', $player_name);
+    $stmt->execute();
+    
+    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 <!DOCTYPE html>
@@ -26,8 +34,10 @@
                             </i>
                     </div>
                     <div id="signup_div">
-                        <input type="text" name="setusername" placeholder="Username" autocomplete="username" required>
-                        <input type="password" name="setpassword" placeholder="Password" autocomplete="current-password" required>
+                        <input type="text" class="signup_ign" name="ign" placeholder="Name" autocomplete="player_name" required>
+                        <input type="text" class="signup_player_name" name="setplayer_name" placeholder="username" autocomplete="username" required>
+                        <input type="password" class="signup_password" name="setpassword" placeholder="Password" autocomplete="current-password" required>
+                        <input type="password" class="signup_confirm" name="setconfirm" placeholder="Confirm password" autocomplete="current-password" required>
                         <input type="submit" value="Sign up">
                     </div>
                 </form>
@@ -47,26 +57,37 @@
         </div>
         <div id="playernamesUIbg">
             <div class="playernamesUI">
-                <form id="playernamelist_UI" action="login.php" method="POST">
+                <form class="login_form" action="login.php" method="POST">
                     <div id="logintxt">
                         <i>
                             Login
                         </i>
                     </div>
                     <div id="login_div">
-                        <input type="text" name="username" placeholder="Username" autocomplete="username" required>
-                        <input type="password" name="password" placeholder="Password" autocomplete="current-password" required>
+                        <input type="text" class="login_player_name" name="username" placeholder="username" autocomplete="username" required>
+                        <input type="password" class="login_password" name="password" placeholder="Password" autocomplete="current-password" required>
                         <input type="submit" value="Login">
                     </div>
                 </form>
+                
                 <div id="delete_and_createplayer">
-                    <div id="createnewplayer" >
+                    <div class="createnewplayer">
                         <div id="playernamessquare">
 
                         </div>
                         <div id="createplayertxt">
                             <i>
                                 Sign up
+                            </i>
+                        </div>
+                    </div>
+                    <div class="logout_div hide">
+                        <div id="playernamessquare">
+
+                        </div>
+                        <div id="logouttxt">
+                            <i>
+                                Logout
                             </i>
                         </div>
                     </div>
@@ -80,7 +101,13 @@
                             </i>
                         </div>
                     </div>
+                    
                 </div>
+            </div>
+        </div>
+        <div class="leaderboardUIbg">
+            <div class="leaderboardUI">
+
             </div>
         </div>
         <div id="mainUI">
@@ -88,31 +115,35 @@
             <!-- <button id="settings">
                 <img id="settingsicon" src="icons/settings.png">
             </button> -->
-            <button id="playerprofile">
-                <img id="pp1" src="icons/square.png">
-                <img id="pp2" src="icons/circle.png">
-                <img id="pp3" src="icons/triangle.png">
-                <i>
-                    <?php
-                        if ($result->num_rows > 0) {
-                            // Data found
-                            // $result = mysqli_query($conn,"select player_name from players where id > 0");
-                            while ($row = $result->fetch_assoc()) {
-                                if ($row["status"] === "active"){
-                                    echo (string)$row['player_name'];
-                                    break;
+            <div class="menu_buttons">
+                <button id="playerprofile">
+                    <img id="pp1" src="icons/square.png">
+                    <img id="pp2" src="icons/circle.png">
+                    <img id="pp3" src="icons/triangle.png">
+                    <i class="playername">
+                        <?php
+                            if (count($result) > 0) {
+                                // Data found
+                                foreach ($result as $row) {
+                                    if ($row["player_name"] === $player_name) {
+                                        echo htmlspecialchars($row['player_name']);
+                                        break;
+                                    }
                                 }
-                                
+                            } else {
+                                echo "Guest";
                             }
+                        ?>
+                    </i>
+                </button>
+                <button class="leaderboard">
+                    <img id="pp4" class="star"  src="icons/star.png">
                     
-                            
-                        }
-                        else{
-                            echo "Guest";
-                        }
-                    ?>
-                </i>
-            </button>
+                    <i>Leaderboard</i>
+                    
+                </button>
+            </div>
+            <div class="response hide"></div>
             <div id="title">
                 <i>
                     SHAPE SHOOTER

@@ -395,15 +395,51 @@ footer {
     z-index: 4;
 }
 
+.bullet.powered {
+    position: absolute;
+    height: 10px;
+    width: 10px;
+    z-index: 1;
+    border-radius: 50%;
+    background-color: rgb(0, 115, 255);
+    box-shadow: 0px 0px 40px #fbfbfb, ;
+    z-index: 4;
+}
+
 .enemybullet {
     position: absolute;
     height: 10px;
     width: 10px;
     z-index: 1;
     border-radius: 50%;
-    background-color: rgb(0, 204, 255);
-    box-shadow: 0px 0px 10px #ed63ff;
+    background-color: rgb(255, 44, 44);
+    box-shadow: 0px 0px 10px #dbff63;
     z-index: 4;
+}
+
+.fast_bullets {
+    position: absolute;
+    height: 10px;
+    width: 10px;
+    z-index: 1;
+    border-radius: 50%;
+    background-color: rgb(0, 145, 255);
+    box-shadow: 0px 0px 10px #05ff26, 0px 0px 20px #05ff26;
+    z-index: 4;
+    animation: fast_bullets 1s infinite alternate ease-in-out;
+}   
+
+@keyframes fast_bullets {
+    0% {
+        transform: scale(0.8);
+        background-color: rgb(0, 238, 255);
+        box-shadow: 0px 0px 20px #05ff26;
+    }
+    100% {
+        transform: scale(1.2);
+        background-color: rgb(0, 76, 255);
+        box-shadow: 0px 0px 30px #00ffdd;
+    }
 }
 
 /* #box {

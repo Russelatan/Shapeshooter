@@ -5,40 +5,19 @@
     $db_pass = '';
     $db_name = "shapeshooter_db";   
     
-
-    try{
-        $conn = mysqli_connect($db_server,$db_user,$db_pass);
+    try {
+        $conn = new PDO("mysql:host=$db_server", $db_user, $db_pass);
+        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } catch (PDOException $e) {
+        echo "Connection failed: " . $e->getMessage();
     }
-    catch(mysqli_sql_exception){
-        echo "connection failed";
-    }
 
-    $sql = "show databases like '$db_name'";
-    $result = mysqli_query($conn, $sql);
-
-    // if (mysqli_num_rows($result) > 0) {
-    //     // Output data of each row
-    //     while($row = mysqli_fetch_assoc($result)) {
-    //         echo "ID: " . $row["id"] . " - Name: " . $row["name"] . " - Email: " . $row["email"] . "<br>";
-    //     }
-    // } else {
-    //     echo "0 results";
-    // }
-
-    if (mysqli_num_rows($result) > 0) {
-        mysqli_query($conn, "use shapeshooter_db");
-
-    } else {
-        mysqli_query($conn, "create database shapeshooter_db");
-        mysqli_query($conn, "use shapeshooter_db");
-        mysqli_query($conn, "create table players (id int not null auto_increment primary key, player_name varchar(30), player_pass varchar(50),player_score varchar(10), status varchar(20))");
-        mysqli_query($conn, "create table highscore (id int not null auto_increment primary key, high_score varchar(30))");
-        mysqli_query($conn, "insert into highscore (`high_score`) values('0')");
-    }
+    
+    $conn->exec("CREATE DATABASE if not exists shapeshooter_db");
+    $conn->exec("USE shapeshooter_db");
+    $conn->exec("CREATE TABLE if not exists players (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, ign VARCHAR(30), player_name VARCHAR(30), player_pass VARCHAR(255), player_score VARCHAR(10))");
+    
 
     // $score = $_POST["score_form"];
-
-
-
 
 ?>

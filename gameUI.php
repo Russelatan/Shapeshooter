@@ -1,6 +1,15 @@
 <?php 
 
-    include("db.php");
+    require "db.php";
+    session_start();
+
+
+    if(isset($_SESSION["username"])){
+        $player_name = $_SESSION["username"];
+    }
+    else{
+        $player_name = null;
+    }
 
 ?>
 
@@ -15,93 +24,78 @@
 <body>
     <!-- <img id="game_bg" src="bg_images/game_background.jpg" alt=""> -->
     <header>
-        <div id="highscoretxt" >
+        <div id="highscoretxt">
             <span>
                 <b>
                     HIGHEST SCORE:
                 </b>
             </span>
         </div>
-        <div id="HIGHSCORE" >
+        <div id="HIGHSCORE">
             <span>
                 <b>
                     <?php
-
                         $highscore = 0;
-                        $highest = mysqli_query($conn,"select player_score from players");
 
-                        if ($highest->num_rows > 0) {
+                        // Prepare and execute the query using PDO
+                        $stmt = $conn->prepare("SELECT player_score FROM players");
+                        $stmt->execute();
+                        $highestScores = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        if (count($highestScores) > 0) {
                             // Data found
-                            // $result = mysqli_query($conn,"select player_name from players where id > 0");
-                            while ($row = $highest->fetch_assoc()) {
-                                if ((int)$row['player_score'] > $highscore){
+                            foreach ($highestScores as $row) {
+                                if ((int)$row['player_score'] > $highscore) {
                                     $highscore = (int)$row['player_score'];
-                                    
-                                }
-                                
-                            }
-                            mysqli_query($conn,"update highscore set high_score = '$highscore' where id = 1");
-
-
-                            $gethighscore = mysqli_query($conn,"select high_score from highscore where id = 1");
-                            if ($gethighscore->num_rows > 0) {
-                                // Data found
-                                // $result = mysqli_query($conn,"select player_name from players where id > 0");
-                                while ($row = $gethighscore->fetch_assoc()) {
-                                    echo (string)$row['high_score'];
-                                    
                                 }
                             }
-                    
-                            
-                        }
-                        else{
+                            echo (string)$highscore;
+                        } else {
                             echo "0";
                         }
-
                     ?>
                 </b>
             </span>
         </div>
-        <div id="yourhighscoretxt" >
+        <div id="yourhighscoretxt">
             <span>
                 <b>
                     YOUR HIGHEST SCORE:
                 </b>
             </span>
         </div>
-        <div id="YOURHIGHSCORE" >
+        <div id="YOURHIGHSCORE">
             <span>
                 <b>
                     <?php
+                        // Prepare and execute the query for active players
+                        if ($player_name){
+                            $stmt = $conn->prepare("SELECT player_score FROM players WHERE player_name = :player_name");
+                            $stmt->execute([":player_name" => $player_name]);
+                            $yourHighestScores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-                        
-                        $yourhighest = mysqli_query($conn,"select player_score from players where status = 'active'");
-
-                        if ($yourhighest->num_rows > 0) {
-                            // Data found
-                            // $result = mysqli_query($conn,"select player_name from players where id > 0");
-                            while ($row = $yourhighest->fetch_assoc()) {
-                                echo (string)$row["player_score"];
-                                
-                            }                    
-                            
+                            if (count($yourHighestScores) > 0) {
+                                // Data found
+                                foreach ($yourHighestScores as $row) {
+                                    echo (string)$row["player_score"];
+                                }                    
+                            } else {
+                                echo "0";
+                            }
                         }
                         else{
                             echo "0";
                         }
-
                     ?>
                 </b>
             </span>
         </div>
-        <div id="options" >
+        <div id="options">
             'P' -> Options
         </div>
     </header>
     <main>
-    
-    <audio id="gamemusic" src="bgm/OneCosmosRoyalty.mp3" autoplay loop volume="1"></audio>
+        <audio id="gamemusic" src="bgm/OneCosmosRoyalty.mp3" autoplay loop volume="1"></audio>
         <div id="gameUI">
             <div id="player" class="player">
                 
@@ -198,17 +192,17 @@
         </div>
     </main>
     <footer>
-        <div id="HP" >
-                <b>
-                    HP:
-                </b>
-            </div>
-        <div class="playerhpdiv" >
-            <div class="playerhp" >
+        <div id="HP">
+            <b>
+                HP:
+            </b>
+        </div>
+        <div class="playerhpdiv">
+            <div class="playerhp">
 
             </div>
         </div>
-        <div id="scoretxt" >
+        <div id="scoretxt">
             <span>
                 <b>
                     SCORE:
@@ -216,7 +210,7 @@
             </span>
         </div>
         <form id="SCOREDIV" action="score.php" method="post">
-            <input type="hidden" id="scoreInput" name="score_form" value="0">
+            <input type="hidden" id="scoreInput" name="score_form" value=0>
             <span id="SCORE">
                <b>
                     0

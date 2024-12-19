@@ -1,30 +1,60 @@
 <?php
 
-    include("db.php");
+require "db.php";
+session_start();
 
-    $username = $_POST['setusername'];
+try {
+    $ign = $_POST['ign'];
+    $player_name = $_POST['setplayer_name'];
     $password = $_POST['setpassword'];
-    $unique = 0;
+    $confirm = $_POST['setconfirm'];
+    $hashed = password_hash($password, PASSWORD_DEFAULT);
 
-    $check_unique = mysqli_query($conn,"select player_name from players");
-    
-    if ($check_unique->num_rows > 0) {
-        // Data found
-        while ($row = $check_unique->fetch_assoc()) {
-            if ($row["player_name"] === $username){
-                $unique++;
-            }
-            
-        }
+    // Check if the player_name already exists
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM players WHERE player_name = :player_name");
+    $stmt->bindParam(':player_name', $player_name);
+    $stmt->execute();
+    $userExists = $stmt->fetchColumn();
 
-        if ($unique === 0){
-            mysqli_query($conn,"insert into players (`player_name`,`player_pass`,`player_score`,`status`) values('$username','$password','0','inactive')");
-            echo "added";
+    if ($userExists > 0) {
+        $response = [
+            'status' => 'error',
+            'message' => 'player_name already exists. Please choose another.'
+        ];
+    } else {
+        if ($password === $confirm){
+            // Insert the new player into the database
+            $insertStmt = $conn->prepare("INSERT INTO players (`ign`, `player_name`, `player_pass`, `player_score`) VALUES (:ign, :player_name, :password, '0')");
+            $insertStmt->bindParam(':ign', $ign);
+            $insertStmt->bindParam(':player_name', $player_name);
+            $insertStmt->bindParam(':password', $hashed);
+            $insertStmt->execute();
+
+            $response = [
+                'status' => 'success',
+                'message' => 'Account created successfully!',
+            ];
         }
-        
+        else{
+            $response = [
+                'status' => 'error',
+                'message' => 'Password and Confirm Password doesn\'t match',
+            ];
+        }
     }
-    else{
-        mysqli_query($conn,"insert into players (`player_name`,`player_pass`,`player_score`,`status`) values('$username','$password','0','inactive')");
-    }
+
+    // Set JSON response header and return response
+    header('Content-Type: application/json');
+    echo json_encode($response);
+
+} catch (PDOException $e) {
+    // Handle database errors
+    $response = [
+        'status' => 'error',
+        'message' => 'An error occurred: ' . $e->getMessage()
+    ];
+    header('Content-Type: application/json');
+    echo json_encode($response);
+}
 
 ?>

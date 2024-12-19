@@ -1,26 +1,35 @@
 <?php
 
-    include("db.php");
+    require "db.php";
+    session_start();
 
-    $username = $_POST['username'];
+    $player_name = $_POST['username'];
     $password = $_POST['password'];
 
-    $find_account = mysqli_query($conn,"select player_name,player_pass from players where player_name = '$username'and player_pass = '$password'");
-    
-    if ($find_account->num_rows > 0) {
-        // Data found
-        mysqli_query($conn,"update players set status = 'inactive' where id > 0");
-        while ($row = $find_account->fetch_assoc()) {
-            if ($row["player_name"] === $username && $row["player_pass"]){
-                mysqli_query($conn,"update players set status = 'active' where player_name = '$username'and player_pass = '$password'");
-            }
-            
-        }
+    // Prepare and execute the query to find the account
+    $stmt = $conn->prepare("SELECT * FROM players WHERE player_name = :player_name");
+    $stmt->bindParam(':player_name', $player_name);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch the first matching record
 
-        
-    }
-    else{
-        echo "invalid username and password";
+    if ($result && password_verify($password, $result['player_pass'])) {
+
+        $response = [
+            'status' => 'success',
+            'message' => 'Login successful!',
+            'player_name' => $result['ign'],
+        ];
+
+        $_SESSION["username"] = $player_name;
+    } else {
+        $response = [
+            'status' => 'failed',
+            'message' => 'Invalid player_name or password',
+            'player_name' => null
+        ];
     }
 
+    // Set JSON response header and return the response
+    header('Content-Type: application/json');
+    echo json_encode($response);
 ?>
